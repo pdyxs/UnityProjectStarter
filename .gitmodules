@@ -10,15 +10,9 @@
 [submodule "Assets/Plugins/Imparter"]
 	path = Assets/Plugins/Imparter
 	url = git@github.com:pdyxs/imparter.git
-[submodule "Assets/Plugins/ObjectPool"]
-	path = Assets/Plugins/ObjectPool
-	url = git@github.com:pdyxs/ObjectPool.git
 [submodule "Assets/Plugins/PlaymakerUtils"]
 	path = Assets/Plugins/PlaymakerUtils
 	url = git@github.com:pdyxs/PlaymakerUtils.git
-[submodule "Assets/Plugins/Somethington"]
-	path = Assets/Plugins/Somethington
-	url = git@github.com:pdyxs/Somethington.git
 [submodule "Assets/Plugins/ThingSpawner"]
 	path = Assets/Plugins/ThingSpawner
 	url = git@github.com:pdyxs/ThingSpawner.git
