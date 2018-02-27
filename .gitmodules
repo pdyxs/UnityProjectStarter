@@ -1,0 +1,33 @@
+[submodule "Assets/Plugins/EditorDrawer"]
+	path = Assets/Plugins/EditorDrawer
+	url = git@github.com:pdyxs/EditorDrawer.git
+[submodule "Assets/Plugins/EventWrappers"]
+	path = Assets/Plugins/EventWrappers
+	url = git@github.com:pdyxs/EventWrappers.git
+[submodule "Assets/Plugins/Explainer"]
+	path = Assets/Plugins/Explainer
+	url = git@github.com:pdyxs/Explainer.git
+[submodule "Assets/Plugins/Imparter"]
+	path = Assets/Plugins/Imparter
+	url = git@github.com:pdyxs/imparter.git
+[submodule "Assets/Plugins/ObjectPool"]
+	path = Assets/Plugins/ObjectPool
+	url = git@github.com:pdyxs/ObjectPool.git
+[submodule "Assets/Plugins/PlaymakerUtils"]
+	path = Assets/Plugins/PlaymakerUtils
+	url = git@github.com:pdyxs/PlaymakerUtils.git
+[submodule "Assets/Plugins/Somethington"]
+	path = Assets/Plugins/Somethington
+	url = git@github.com:pdyxs/Somethington.git
+[submodule "Assets/Plugins/ThingSpawner"]
+	path = Assets/Plugins/ThingSpawner
+	url = git@github.com:pdyxs/ThingSpawner.git
+[submodule "Assets/Plugins/UnityUtils"]
+	path = Assets/Plugins/UnityUtils
+	url = git@github.com:pdyxs/UnityUtils.git
+[submodule "Assets/Plugins/WordExpander"]
+	path = Assets/Plugins/WordExpander
+	url = git@github.com:pdyxs/WordExpander.git
+[submodule "Assets/Plugins/I2LocalisationUtil"]
+	path = Assets/Plugins/I2LocalisationUtil
+	url = git@github.com:pdyxs/I2LocalizationUtil.git
