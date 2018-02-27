@@ -5,12 +5,14 @@ using UnityEditor.iOS_I2Loc.Xcode;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using System.Linq;
+
 
 namespace I2.Loc
 {
     public class PostProcessBuild_IOS
     {
-        [PostProcessBuild]
+        [PostProcessBuild(10000)]
         public static void ChangeXcodePlist(BuildTarget buildTarget, string pathToBuiltProject)
         {
             if (buildTarget != BuildTarget.iOS)
@@ -18,8 +20,8 @@ namespace I2.Loc
 
 			if (LocalizationManager.Sources.Count <= 0)
 				LocalizationManager.UpdateSources();
-			var langCodes = LocalizationManager.GetAllLanguagesCode(false);
-			if (langCodes.Count <= 0)
+            var langCodes = LocalizationManager.GetAllLanguagesCode(false).Concat(LocalizationManager.GetAllLanguagesCode(true)).Distinct().ToList();
+            if (langCodes.Count <= 0)
 				return;
 				
             try

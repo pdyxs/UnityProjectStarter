@@ -1,6 +1,6 @@
 ﻿----------------------------------------------
               I2 Localization
-                  2.8.0 f3
+                  2.8.3 f1
         http://www.inter-illusion.com
           inter.illusion@gmail.com
 ----------------------------------------------
@@ -50,6 +50,81 @@ That will help with the sales and allow me to invest more time improving the plu
 -----------------------
  Version History
 -----------------------
+2.8.3
+NEW: Runtime Memory optimization by loading/unloading languages depending on which ones is in use
+NEW: Added Support for the following languages: (Although Google Translate doesn't support all of them)
+     Abkhazian, Afar, Akan, Amharic, Aragonese, Assamese, Avaric, Avestan, Aymara, Bambara, Bashkir, Bengali, Bihari,
+     Bislama, Breton, Burmese, Chamorro, Chechen, Chichewa, Chuvash, Cornish, Corsican, Cree, Divehi, Dzongkha, Ewe,
+     Fijian, Fulah, Guaraní, Haitian, Hausa, Herero, Hiri Motu, Interlingua, Interlingue, Igbo, Inupiaq, Ido, Inuktitut,
+     Javanese, Kalaallisut, Kanuri, Kashmiri, Central Khmer, Kikuyu, Kinyarwanda, Kirghiz, Komi, Kongo, Kuanyama,
+     Luxembourgish, Ganda, Limburgan, Lingala, Lao, Luba-Katanga, Manx, Malagasy, Marshallese, Nauru, Navajo, North Ndebele,
+     Nepali, Ndonga, Sichuan Yi, South Ndebele, Occitan, Ojibwa, Church Slavic, Oromo, Oriya, Ossetian, Panjabi, Pali, Rundi,
+     Sanskrit, Sardinian, Sindhi, Northern Sami, Samoan, Sango, Scottish Gaelic, Shona, Sinhala, Somali, Southern Sotho,
+     Sundanese, Swati, Tajik, Tigrinya, Tibetan, Turkmen, Tagalog, Tswana, Tonga, Tsonga, Twi, Tahitian, Uighur, Venda,
+     Volapük, Walloon, Wolof, Frisian, Yoruba, Zhuang
+NEW: Exposed a variant of the LocalizationManager.ApplyLocalizationParams that can get the parameters from a function
+NEW: Localization Target now use ScriptableObject to allow keeping extra parameters to setup the targets
+NEW: Android devices now properly detect the Device Language Region (no longer using Unity's Application.SystemLanguage)
+FIX: Two parameters in a single translation was failing if the length of the text was not the same
+FIX: 'Missing' icon was not showing in the Term's list when in Unity 2017+
+FIX: Compatibility with Window Store Apps and UWP
+FIX: Support for multiple Localize component in the same GameObject
+FIX: Increased the PostProcessBuild priority to avoid conflicting with other plugins
+FIX: Assigning None to a Term translation's Object Field was ignored
+FIX: LocalizationManager.OnLocalizeEvent now correctly releases all callbacks after finishing Play Mode in the Editor
+FIX: Term list in language source was showing empty space for some seconds after unselecting a term
+
+2.8.2
+NEW: Improved the example scene: 'I2Localization    features LocalizedString.unity'
+NEW: Added a version of ForceTranslate to translate several texts at the same time
+NEW: The translate/Translate All button will now skip terms that don't have type "Text" (avoid Materials, Fonts, etc)
+NEW: Restored the translate button for each translation field, but this time it shows only "T" to still allow more space
+NEW: Google Translate will now skip tags (e.g. [tag]..[/tag], <tag>..</tag>)
+NEW: Google Translate skips any text inside [i2nt].ignored.text.[i2nt].  Those tags are also not used when rendering translations
+NEW: Basic Hindi / Devanagari support
+NEW: Optimized GC Allocations, removed runtime usage of Regex
+NEW: By default, all scenes will be selected in the LanguageSource tools (Parsing, Renaming, Changing Category, etc)
+FIX: Issue with some unity versions failing when Translate All/Export with an error related to 'Rewinding' the POST result
+FIX: Issue where clicking the translate button was failing when terms source translation had & or similar symbols
+FIX: Issue with some unity versions failing when Translate All/Export with an error related to 'Rewinding' the POST result
+FIX: Issue where clicking the translate button was failing when terms source translation had & or similar symbols
+FIX: Button "Translate All" will not longer override non-empty translations when input type is Touch instead of Normal
+FIX: Play in Editor sometimes failed to localize when changing languages
+FIX: Translating all terms to a language with a variant (e.g. en-CA) was failing
+FIX: Example scenes had warning loading when the project was set to serialization: Force Text 
+FIX: Long Key names are now clamped to 100 characters in the terms list so that it doesn't get too wide
+FIX: GoogleTranslate.ForceTranslate was not handling tags and parameters
+FIX: LanguageSources in the scenes were not loaded inside the editor until they were clicked
+FIX: Localize target AudioSource was not playing all the time
+FIX: Selecting a different Target type in the Localize component was not updating correctly
+FIX: Localization failed when there where empty slots in the Assets list (LangaugeSource) or References (localizeComponent)
+
+2.8.1
+NEW: Plural support with multiple Plural forms based on the target language
+NEW: LocalizeDropdown now supports TMPro Dropdown
+NEW: Adding a Term will automatically detect the Term type (e.g. Sprite, Font,...) (instead of always defaulting to "Text")
+NEW: Google Translation will now generate translation for each plural form of the target language
+NEW: New Term Type: Child  (it enables the child GameObject with the name matching the translation to that language)
+NEW: CharSet tool now has buttons to select all languages, clear or invert the selection
+NEW: Right-To-Left and Modifiers sections in the Localize inspector will now only show if the term's type is 'Text'
+NEW: Confirmation dialog before deleting a Language
+NEW: Modified the WebService to support translation requests using POST. This increases the reliability of translating large data sets.
+NEW: Added a close button to the Error message in the inspector.
+NEW: When the Verify WebService fails, it will now display the error in the inspector
+NEW: LocalizationManager.ApplyLocalizationParameters can now use Global, Local parameters or a dictionary of parameters
+NEW: LocalizedString inspector now has a button that opens the LanguageSource to allow editing the term
+NEW: The LanguageSource now has an option to decide if default Language will be Device Language or the first in the Languages list
+NEW: LanguageSource's terms list now shows 3 dots (...) after the last term if some terms were hidden by the category filter
+NEW: Sub Sprite Terms will now show the full path of the sprite (e.g. "Atlas.SpriteName")
+DEL: Removed the "Translate" button next to each translation to allow for more space. Instead, use the "Translate All" in term/language
+FIX: Term Type 'GameObject' now works as expected
+FIX: IOS AppName Localization was not exporting languages with regions
+FIX: Clicking the delete button ("x") of a disable button will now correctly delete it (no need to manually enable and then delete)
+FIX: Google Translation will not longer fail silently when the target language is not supported by Google translate
+FIX: Building Android Apps with a name including (') was failing
+FIX: Sometimes when playing in editor, changing the language didn't localize all texts
+FIX: Restored the GoogleTranslation.ForceTranslate (although its noted that it may fail in some unity versions having the www blocking bug)
+
 2.8.0
 NEW: Downloaded Spreadsheets at runtime are now saved into a file in the persitentData folder to avoid overflowing the PlayerPrefs
 NEW: Example scene showing how to use LocalizedString

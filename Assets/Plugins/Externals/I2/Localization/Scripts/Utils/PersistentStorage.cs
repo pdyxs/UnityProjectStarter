@@ -70,5 +70,50 @@ namespace I2.Loc
             }
         }
 #endif
+
+
+        public static bool SaveFile(string fileName, string data)
+        {
+            try
+            {
+                //Debug.Log("Saving file: " + fileName);
+                System.IO.File.WriteAllText(fileName, data, System.Text.Encoding.UTF8);
+                return true;
+            }
+            catch (Exception)
+            {
+                Debug.LogError("Error saving file " + fileName);
+                return false;
+            }
+        }
+
+        public static string LoadFile(string fileName)
+        {
+            try
+            {
+                return System.IO.File.ReadAllText(fileName, System.Text.Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static void DeleteFile(string fileName)
+        {
+            try
+            {
+                System.IO.File.Delete(fileName);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public static bool HasFile(string fileName)
+        {
+            return System.IO.File.Exists(fileName);
+        }
+
     }
 }

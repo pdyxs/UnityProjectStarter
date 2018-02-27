@@ -130,6 +130,13 @@
             <param name="createIfMissing">If TRUE and the requested asset doesn't exist, forces its creation</param>
             <param name="createFoldersIfMissing">If TRUE also creates the path folders if they don't exist</param>
         </member>
+        <member name="M:DG.DemiEditor.DeEditorPanelUtils.IsDockableWindow(UnityEditor.EditorWindow)">
+            <summary>
+            Returns TRUE if the given <see cref="T:UnityEditor.EditorWindow"/> is dockable, FALSE if instead it's a utility window
+            </summary>
+            <param name="editor"></param>
+            <returns></returns>
+        </member>
         <member name="M:DG.DemiEditor.DeEditorPanelUtils.SetWindowTitle(UnityEditor.EditorWindow,UnityEngine.Texture,System.String)">
             <summary>
             Sets the icon and title of an editor window. Works with older versions of Unity, where the titleContent property wasn't available.
@@ -338,6 +345,19 @@
             </summary>
         </member>
         <member name="M:DG.DemiEditor.DeGUINodeSystem.Core.Connector.Connect(DG.DemiEditor.DeGUINodeSystem.NodeProcess,System.Int32,System.Int32,DG.DemiEditor.DeGUINodeSystem.NodeConnectionOptions,DG.DemiLib.IEditorGUINode,DG.DemiLib.IEditorGUINode)">
+            <summary>
+            Always connects from BottomOrRight side to TopOrLeft side.
+            If ALT is pressed shows the delete connection button.
+            Called during Repaint or MouseDown/Up.
+            Returns TRUE if the connection was deleted using the delete connection button.
+            </summary>
+        </member>
+        <member name="T:DG.DemiEditor.DeGUINodeSystem.Core.Legacy_Connector">
+            <summary>
+            Always connects a node from BottomOrRight side to TopOrLeft side
+            </summary>
+        </member>
+        <member name="M:DG.DemiEditor.DeGUINodeSystem.Core.Legacy_Connector.Connect(DG.DemiEditor.DeGUINodeSystem.NodeProcess,System.Int32,System.Int32,DG.DemiEditor.DeGUINodeSystem.NodeConnectionOptions,DG.DemiLib.IEditorGUINode,DG.DemiLib.IEditorGUINode)">
             <summary>
             Always connects from BottomOrRight side to TopOrLeft side.
             If ALT is pressed shows the delete connection button.

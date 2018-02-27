@@ -9,9 +9,9 @@ namespace I2.Loc
 	{
 		#region Variables
 
-		static Dictionary<string, string> mGoogleSpreadsheets = new Dictionary<string, string>(StringComparer.Ordinal);
+		public static Dictionary<string, string> mGoogleSpreadsheets = new Dictionary<string, string>(StringComparer.Ordinal);
 
-		WWW mConnection_WWW;
+		public WWW mConnection_WWW;
 		Action<string, string> mConnection_Callback;
 		//float mConnection_TimeOut;
 
@@ -149,8 +149,8 @@ namespace I2.Loc
 						float Width = 15;
 						rect.xMin = rect.xMax+1;
 						rect.xMax = rect.xMin + rect.height;
-						GUI.DrawTexture( rect, GUI.skin.GetStyle("CN EntryWarn").normal.background);
-						GUI.Label(rect, new GUIContent("", "The current Google WebService is not supported.\nPlease, delete the WebService from the Google Drive and Install the latest version."));
+                        GUITools.DrawSkinIcon(rect, "CN EntryWarnIcon", "CN EntryWarn");
+						GUI.Label(rect, new GUIContent("\u2717", "The current Google WebService is not supported.\nPlease, delete the WebService from the Google Drive and Install the latest version."));
 						GUILayout.Space (Width);
 					}
 				}
@@ -160,11 +160,12 @@ namespace I2.Loc
 				GUILayout.Space (118);
 				if (GUILayout.Button(new GUIContent("Install", "This opens the Web Service Script and shows you steps to install and authorize it on your Google Drive"), EditorStyles.toolbarButton))
 				{
-					ClearErrors();
-					Application.OpenURL("https://goo.gl/RBCO0o");  // V4:https://script.google.com/d/1T7e5_40NcgRyind-yeg4PAkHz9TNZJ22F4RcbOvCpAs03JNf1vKNNTZB/newcopy
-					//Application.OpenURL("https://goo.gl/wFSbv2");// V3:https://script.google.com/d/1CxQDSXflsXRaH3M7xGfrIDrFwOIHWPsYTWi4mRZ_k77nyIInTgIk63Kd/newcopy");
-				}
-				if (GUILayout.Button("Verify", EditorStyles.toolbarButton))
+    					ClearErrors();
+                        Application.OpenURL("https://script.google.com/d/1zcsLSmq3Oddd8AsLuoKNDG1Y0eYBOHzyvGT7v94u1oN6igmsZb_PJzEm/newcopy");  // V5
+                        //Application.OpenURL("https://goo.gl/RBCO0o");  // V4:https://script.google.com/d/1T7e5_40NcgRyind-yeg4PAkHz9TNZJ22F4RcbOvCpAs03JNf1vKNNTZB/newcopy
+                        //Application.OpenURL("https://goo.gl/wFSbv2");// V3:https://script.google.com/d/1CxQDSXflsXRaH3M7xGfrIDrFwOIHWPsYTWi4mRZ_k77nyIInTgIk63Kd/newcopy");
+                }
+                if (GUILayout.Button("Verify", EditorStyles.toolbarButton))
 				{
 					ClearErrors();
 					VerifyGoogleService(mProp_Google_WebServiceURL.stringValue);
@@ -220,6 +221,7 @@ namespace I2.Loc
 				GUILayout.Label ("In Google Drive:", GUILayout.Width(100));
 
 				GUI.changed = false;
+				GUI.enabled = (Spreadsheets != null && Spreadsheets.Length>0);
 				mSpreadsheetIndex = EditorGUILayout.Popup(mSpreadsheetIndex, Spreadsheets, EditorStyles.toolbarPopup);
 				if (GUI.changed && mSpreadsheetIndex >= 0)
 				{
@@ -227,6 +229,7 @@ namespace I2.Loc
 					mProp_Google_SpreadsheetName.stringValue = Spreadsheets[mSpreadsheetIndex];
 					GUI.changed = false;
 				}
+				GUI.enabled = true;
 
 				GUI.enabled = !string.IsNullOrEmpty(mProp_Google_SpreadsheetKey.stringValue) && mConnection_WWW==null;
 				if (GUILayout.Button("X", EditorStyles.toolbarButton,GUILayout.ExpandWidth(false)))
@@ -250,8 +253,8 @@ namespace I2.Loc
 
 				GUILayout.Space(5);
 
-				if (GUILayout.Button("Refresh", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true)))
-					Google_FindSpreadsheets();
+				if (TestButton(eTest_ActionType.Button_GoogleSpreadsheet_RefreshList, "Refresh", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true)))
+					EditorApplication.update+=Google_FindSpreadsheets;
 
 				GUILayout.Space(10);
 			GUILayout.EndHorizontal();
@@ -273,26 +276,32 @@ namespace I2.Loc
 				GUILayout.Space(10);
 
 				eSpreadsheetUpdateMode Mode = SynchronizationButtons("Import");
-				if ( Mode!= eSpreadsheetUpdateMode.None)
+				if ( Mode!= eSpreadsheetUpdateMode.None || InTestAction(eTest_ActionType.Button_GoogleSpreadsheet_Import))
 				{
-					ClearErrors();
-					serializedObject.ApplyModifiedProperties();
-				
-					Import_Google(Mode);
+                    if (mTestAction == eTest_ActionType.Button_GoogleSpreadsheet_Import)
+                        Mode = (eSpreadsheetUpdateMode)mTestActionArg;
+
+                    serializedObject.ApplyModifiedProperties();
+
+                    var modeCopy = Mode;                
+                    GUITools.DelayedCall(() => Import_Google(modeCopy));
 				}
 
 				GUILayout.FlexibleSpace();
 
 				Mode = SynchronizationButtons("Export");
-				if ( Mode != eSpreadsheetUpdateMode.None)
+				if ( Mode != eSpreadsheetUpdateMode.None || InTestAction(eTest_ActionType.Button_GoogleSpreadsheet_Export))
 				{
-					ClearErrors();
-					serializedObject.ApplyModifiedProperties();
-				
-					Export_Google(Mode);
-				}
+                    if (mTestAction == eTest_ActionType.Button_GoogleSpreadsheet_Export)
+                        Mode = (eSpreadsheetUpdateMode)mTestActionArg;
 
-				GUILayout.Space(10);
+                    serializedObject.ApplyModifiedProperties();
+
+                    var modeCopy = Mode;
+                    GUITools.DelayedCall( ()=>Export_Google(modeCopy) );
+                }
+
+            GUILayout.Space(10);
 			GUILayout.EndHorizontal();
 
 			GUI.enabled = true;
@@ -327,6 +336,9 @@ namespace I2.Loc
 				GUILayout.Space(2);
 			GUILayout.EndVertical();
 
+            if (Result != eSpreadsheetUpdateMode.None)
+                ClearErrors();
+
 			return Result;
 		}
 		#endregion
@@ -355,19 +367,30 @@ namespace I2.Loc
 				return;
 			}
 
-			try
-			{
-				var data = SimpleJSON.JSON.Parse(Result).AsObject;
-				int version = int.Parse (data["script_version"]);
-				int requiredVersion = LocalizationManager.GetRequiredWebServiceVersion();
-				mWebService_Status = (requiredVersion<=version ? "Online" : "UnsupportedVersion");
-				ClearErrors();
-			}
-			catch(Exception)
-			{
-				ShowError ("Unable to access the WebService");
-				mWebService_Status = "Offline";
-			}
+            try
+            {
+                var data = SimpleJSON.JSON.Parse(Result).AsObject;
+				int version = 0;
+				if (!int.TryParse(data["script_version"], out version))
+					version = 0;
+                int requiredVersion = LocalizationManager.GetRequiredWebServiceVersion();
+
+                if (requiredVersion == version)
+                {
+                    mWebService_Status = "Online";
+                    ClearErrors();
+                }
+                else
+                {
+                    mWebService_Status = "UnsupportedVersion";
+                    ShowError("The current Google WebService is not supported.\nPlease, delete the WebService from the Google Drive and Install the latest version.");
+                }
+            }
+            catch (Exception)
+            {
+                ShowError("Unable to access the WebService");
+                mWebService_Status = "Offline";
+            }
 		}
 
 
@@ -387,9 +410,9 @@ namespace I2.Loc
 				mConnection_Text = "Uploading spreadsheet";
 				//mConnection_TimeOut = Time.realtimeSinceStartup + 10;
 			}
-		}
+        }
 
-		void OnExported_Google( string Result, string Error )
+        void OnExported_Google( string Result, string Error )
 		{
 			if (!string.IsNullOrEmpty(Error))
 			{
@@ -398,8 +421,9 @@ namespace I2.Loc
 				return;
 			}
 
-			if (EditorPrefs.GetBool("I2Loc OpenDataSourceAfterExport", true))
-				OpenGoogleSpreadsheet( ((LanguageSource)target).Google_SpreadsheetKey );
+            var source = ((LanguageSource)target);
+            if (EditorPrefs.GetBool("I2Loc OpenDataSourceAfterExport", true) && !string.IsNullOrEmpty(source.Google_SpreadsheetName))
+				OpenGoogleSpreadsheet(source.Google_SpreadsheetKey );
 		}
 
 		static void OpenGoogleSpreadsheet( string SpreadsheetKey )
@@ -442,6 +466,7 @@ namespace I2.Loc
 		{
 			if (!string.IsNullOrEmpty(Error))
 			{
+                Debug.Log(Error);
 				ShowError("Unable to access google");
 				return;
 			}
@@ -565,15 +590,16 @@ namespace I2.Loc
 
 		void Google_FindSpreadsheets()
 		{
-			#if UNITY_WEBPLAYER
+            EditorApplication.update -= Google_FindSpreadsheets;
+            #if UNITY_WEBPLAYER
 			ShowError ("Contacting google translation is not yet supported on WebPlayer" );
-			#else
-			string query =  mProp_Google_WebServiceURL.stringValue + "?action=GetSpreadsheetList";
+#else
+            string query =  mProp_Google_WebServiceURL.stringValue + "?action=GetSpreadsheetList";
 			mConnection_WWW = new WWW(query);
 			mConnection_Callback = Google_OnFindSpreadsheets;
 			EditorApplication.update += CheckForConnection;
 			mConnection_Text = "Accessing google";
-			//mConnection_TimeOut = Time.realtimeSinceStartup + 10;
+            //mConnection_TimeOut = Time.realtimeSinceStartup + 10;
 			#endif
 		}
 

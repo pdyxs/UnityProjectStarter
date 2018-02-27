@@ -28,7 +28,7 @@ namespace I2.Loc
             }
         }
 
-        //[PostProcessBuild]
+        //[PostProcessBuild(10000)]
         public static void PostProcessAndroid(BuildTarget buildTarget, string pathToBuiltProject)
 		{
 			if (buildTarget!=BuildTarget.Android && buildTarget!=BuildTarget.Tizen)
@@ -59,6 +59,7 @@ namespace I2.Loc
                 if (fixedCode.StartsWith("zh", System.StringComparison.OrdinalIgnoreCase))
                 {
                     string googleCode = GoogleLanguages.GetGoogleLanguageCode(fixedCode);
+                    if (googleCode==null) googleCode = fixedCode;
                     fixedCode = (googleCode == "zh-CN") ? "zh-CN" : "zh";
                 }
 				fixedCode = fixedCode.Replace("-", "-r");
@@ -89,7 +90,8 @@ namespace I2.Loc
         {
             try
             {
-				appName = appName.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
+                appName = appName.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "\\\"").Replace("'", "\\'");
+                //appName = appName.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "\\'");
 
                 if (!System.IO.Directory.Exists(folder))
                     System.IO.Directory.CreateDirectory(folder);

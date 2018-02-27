@@ -116,7 +116,7 @@ namespace I2.Loc
 
 			GUILayout.Space (10);
 
-			I2AboutWindow.OnGUI_Footer("I2 Localization", LocalizationManager.GetVersion(), LocalizeInspector.HelpURL_forum, LocalizeInspector.HelpURL_Documentation);
+			GUITools.OnGUI_Footer("I2 Localization", LocalizationManager.GetVersion(), LocalizeInspector.HelpURL_forum, LocalizeInspector.HelpURL_Documentation, LocalizeInspector.HelpURL_AssetStore);
 
 			EditorGUIUtility.labelWidth = 0;
 

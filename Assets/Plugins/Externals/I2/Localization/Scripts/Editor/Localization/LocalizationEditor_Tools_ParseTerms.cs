@@ -130,40 +130,42 @@ namespace I2.Loc
             EditorApplication.update -= DoParseTermsInCurrentScene;
 			ParseTerms(true);
         }
-		
-		static void ParseTerms( bool OnlyCurrentScene, bool OpenTermsTab = true)
-		{ 
-			mIsParsing = true;
 
-			mParsedTerms.Clear();
-			mSelectedKeys.Clear ();
+        static void ParseTerms(bool OnlyCurrentScene, bool OpenTermsTab = true)
+        {
+            mIsParsing = true;
+
+            mParsedTerms.Clear();
+            mSelectedKeys.Clear();
             mParsedCategories.Clear();
 
-			//if (mParseTermsIn_Scripts)
-			//	ParseTermsInScripts();
+            //if (mParseTermsIn_Scripts)
+            //	ParseTermsInScripts();
 
-			if (mParseTermsIn_Scenes)
-			{
-				if (!OnlyCurrentScene)
-					ExecuteActionOnSelectedScenes( FindTermsInCurrentScene );
-				else 
-					FindTermsInCurrentScene();
-			}
-			
-			FindTermsNotUsed();
+            if (mParseTermsIn_Scenes)
+            {
+                if (!OnlyCurrentScene)
+                    ExecuteActionOnSelectedScenes(FindTermsInCurrentScene);
+                else
+                    FindTermsInCurrentScene();
+            }
+
+            FindTermsNotUsed();
             ScheduleUpdateTermsToShowInList();
 
-		
-			if (mParsedTerms.Count<=0)
-			{
-				ShowInfo ("No terms where found during parsing");
-				return;
-			}
+
+            if (mParsedTerms.Count <= 0)
+            {
+                ShowInfo("No terms where found during parsing");
+                return;
+            }
 
             UpdateParsedCategories();
+            {
+                mSelectedCategories.Clear();
+                mSelectedCategories.AddRange(mParsedCategories);
+            }
 
-            mSelectedCategories.Clear();
-            mSelectedCategories.AddRange(mParsedCategories);
 
             if (mLanguageSource!=null)
             {

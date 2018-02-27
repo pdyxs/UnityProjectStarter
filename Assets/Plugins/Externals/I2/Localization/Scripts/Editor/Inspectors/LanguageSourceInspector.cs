@@ -11,11 +11,12 @@ namespace I2.Loc
 		SerializedProperty 	mProp_Assets, mProp_Languages, 
 							mProp_Google_WebServiceURL, mProp_GoogleUpdateFrequency, mProp_GoogleUpdateDelay, mProp_Google_SpreadsheetKey, mProp_Google_SpreadsheetName, 
 							mProp_Spreadsheet_LocalFileName, mProp_Spreadsheet_LocalCSVSeparator, mProp_CaseInsensitiveTerms, mProp_Spreadsheet_LocalCSVEncoding,
-                            mProp_OnMissingTranslation, mProp_AppNameTerm;
+							mProp_OnMissingTranslation, mProp_AppNameTerm, mProp_IgnoreDeviceLanguage;
 
 		public static LanguageSource mLanguageSource;
+        public static LocalizationEditor mLanguageSourceEditor;
 
-		static bool mIsParsing = false;  // This is true when the editor is opening several scenes to avoid reparsing objects
+        static bool mIsParsing = false;  // This is true when the editor is opening several scenes to avoid reparsing objects
 
 		#endregion
 		
@@ -27,7 +28,7 @@ namespace I2.Loc
 		public GUISkin CustomSkin;
 
 		static Vector3 mScrollPos_Languages;
-		static string mLanguages_NewLanguage = "";
+		public static string mLanguages_NewLanguage = "";
 
 		#endregion
 
@@ -54,8 +55,10 @@ namespace I2.Loc
 			var newSource = target as LanguageSource;
 			bool ForceParse = (mLanguageSource != newSource);
 			mLanguageSource = newSource;
+            mLanguageSourceEditor = this;
 
-			if (!LocalizationManager.Sources.Contains(mLanguageSource))
+
+            if (!LocalizationManager.Sources.Contains(mLanguageSource))
 				LocalizationManager.UpdateSources();
             mProp_Assets                        = serializedObject.FindProperty("Assets");
             mProp_Languages                     = serializedObject.FindProperty("mLanguages");
@@ -70,6 +73,7 @@ namespace I2.Loc
             mProp_Spreadsheet_LocalCSVEncoding  = serializedObject.FindProperty("Spreadsheet_LocalCSVEncoding");
             mProp_OnMissingTranslation          = serializedObject.FindProperty("OnMissingTranslation");
 			mProp_AppNameTerm					= serializedObject.FindProperty("mTerm_AppName");
+			mProp_IgnoreDeviceLanguage			= serializedObject.FindProperty("IgnoreDeviceLanguage");
 
             if (!mIsParsing)
 			{
@@ -89,8 +93,16 @@ namespace I2.Loc
                 }
 			}
             ScheduleUpdateTermsToShowInList();
+			LoadSelectedCategories();
             //UpgradeManager.EnablePlugins();
         }
+
+		void OnDisable()
+		{
+			//LocalizationManager.LocalizeAll();
+			SaveSelectedCategories();
+		}
+
 
         void UpdateSelectedKeys()
 		{
@@ -111,7 +123,7 @@ namespace I2.Loc
 			if (mSelectedScenes.Count==0)
 				mSelectedScenes.Add (Editor_GetCurrentScene());
         }
-        
+
         public override void OnInspectorGUI()
 		{
 			// Load Test:
@@ -153,18 +165,18 @@ namespace I2.Loc
 			GUILayout.Space (10);
 			GUILayout.FlexibleSpace();
 
-            I2AboutWindow.OnGUI_Footer("I2 Localization", LocalizationManager.GetVersion(), LocalizeInspector.HelpURL_forum, LocalizeInspector.HelpURL_Documentation);
+			GUITools.OnGUI_Footer("I2 Localization", LocalizationManager.GetVersion(), LocalizeInspector.HelpURL_forum, LocalizeInspector.HelpURL_Documentation, LocalizeInspector.HelpURL_AssetStore);
 
 			GUILayout.EndVertical();
 
 			serializedObject.ApplyModifiedProperties();
-		}
-
-		/*void OnDisable()
-		{
-			LocalizationManager.LocalizeAll();
-		}*/
-
+            if (Event.current.type == EventType.Repaint)
+            {
+                mTestAction = eTest_ActionType.None;
+                mTestActionArg = null;
+                mTestActionArg2 = null;
+            }
+        }
 
 		#endregion
 	}

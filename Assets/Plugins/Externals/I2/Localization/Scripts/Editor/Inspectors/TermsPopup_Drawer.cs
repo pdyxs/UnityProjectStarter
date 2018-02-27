@@ -88,11 +88,11 @@ namespace I2.Loc
     {
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            var termRect = rect;    termRect.xMax -= 25;
+            var termRect = rect;    termRect.xMax -= 50;
             var termProp = property.FindPropertyRelative("mTerm");
             TermsPopup_Drawer.ShowGUI(termRect, termProp, label, null);
 
-            var maskRect = rect;    maskRect.xMin = maskRect.xMax - 25;
+            var maskRect = rect;    maskRect.xMin = maskRect.xMax - 30;
             var termIgnoreRTL       = property.FindPropertyRelative("mRTL_IgnoreArabicFix");
             var termConvertNumbers  = property.FindPropertyRelative("mRTL_ConvertNumbers");
             int mask = (termIgnoreRTL.boolValue ? 0 : 1) + 
@@ -104,6 +104,17 @@ namespace I2.Loc
                 termIgnoreRTL.boolValue      = (newMask & 1) == 0;
                 termConvertNumbers.boolValue = (newMask & 2) == 0;
             }
+
+			var showRect = rect;    showRect.xMin = termRect.xMax; showRect.xMax=maskRect.xMin;
+			bool enabled = GUI.enabled;
+			GUI.enabled = enabled & (!string.IsNullOrEmpty (termProp.stringValue) && termProp.stringValue!="-");
+			if (GUI.Button (showRect, "?")) 
+			{
+				var source = LocalizationManager.GetSourceContaining(termProp.stringValue);
+				LocalizationEditor.mKeyToExplore = termProp.stringValue;
+				Selection.activeObject = source;
+			}
+			GUI.enabled = enabled;
         }
     }
 }

@@ -12,8 +12,6 @@ namespace I2.Loc
 
 		static UpgradeManager()
 		{
-			I2Analytics.PluginsVersion["I2 Localization"] = LocalizationManager.GetVersion();
-			I2Analytics.SendAnalytics("I2 Localization", LocalizationManager.GetVersion()); // Tracks Unity version usage to know when is safe to discontinue support to old unity versions (this allows me to focus more where is more useful to you)
 			EditorApplication.update += AutoCheckPlugins;
 		}
 
@@ -159,7 +157,7 @@ namespace I2.Loc
 			
 		}
 		
-		[MenuItem( "Tools/I2 Localization/Create I2Languages", false, 1)]
+		//[MenuItem( "Tools/I2 Localization/Create I2Languages", false, 1)]
 		public static void CreateLanguageSources()
 		{
 			if (LocalizationManager.GlobalSources==null || LocalizationManager.GlobalSources.Length==0)
@@ -169,8 +167,8 @@ namespace I2.Loc
 			if (GlobalSource!=null)
 				return;
 			
-			string PluginPath = GetI2LocalizationPath();
-			string ResourcesFolder = PluginPath.Substring(0, PluginPath.Length-"/Localization".Length) + "/Resources";
+			//string PluginPath = GetI2LocalizationPath();
+            string ResourcesFolder = "Assets/Resources";//PluginPath.Substring(0, PluginPath.Length-"/Localization".Length) + "/Resources";
 			
 			string fullresFolder = Application.dataPath + ResourcesFolder.Replace("Assets","");
 			if (!System.IO.Directory.Exists(fullresFolder))
@@ -189,8 +187,27 @@ namespace I2.Loc
 			AssetDatabase.SaveAssets();
 			AssetDatabase.Refresh();
 		}
-		
-		/*static void CreateScriptLocalization()
+
+        [MenuItem("Tools/I2 Localization/Help", false, 30)]
+        [MenuItem("Help/I2 Localization")]
+        public static void MainHelp()
+        {
+            Application.OpenURL(LocalizeInspector.HelpURL_Documentation);
+        }
+
+        [MenuItem("Tools/I2 Localization/Open I2Languages.prefab", false, 0)]
+        public static void OpenGlobalSource()
+        {
+            CreateLanguageSources();
+            GameObject GO = Resources.Load<GameObject>(LocalizationManager.GlobalSources[0]);
+            if (GO == null)
+                Debug.Log("Unable to find Global Language at Assets/Resources/" + LocalizationManager.GlobalSources[0] + ".prefab");
+            
+            Selection.activeGameObject = GO;
+        }
+
+
+        /*static void CreateScriptLocalization()
 		{
 			string[] assets = AssetDatabase.FindAssets("ScriptLocalization");
 			if (assets.Length>0)
@@ -204,8 +221,8 @@ namespace I2.Loc
 			AssetDatabase.SaveAssets();
 			AssetDatabase.Refresh();
 		}*/
-		
-		public static string GetI2LocalizationPath()
+
+        public static string GetI2LocalizationPath()
 		{
 			string[] assets = AssetDatabase.FindAssets("LocalizationManager");
 			if (assets.Length==0)

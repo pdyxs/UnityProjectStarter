@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 
-namespace I2
+namespace I2.Loc
 {	
 	public class GUITools
 	{
@@ -16,7 +16,32 @@ namespace I2
         static public GUILayoutOption DontExpandWidth = GUILayout.ExpandWidth(false);
         static public GUIContent EmptyContent = new GUIContent ();
 
-         #region Header
+        static List<System.Action> mDelayedEditorCallbacks = new List<System.Action>();
+
+        #region Delayed Editor Callback
+
+        public static void DelayedCall( System.Action action )
+        {
+            if (mDelayedEditorCallbacks.Count == 0)
+                EditorApplication.update += OnDelayedCall;
+
+            mDelayedEditorCallbacks.Add(action);
+        }
+
+        static void OnDelayedCall()
+        {
+            EditorApplication.update -= OnDelayedCall;
+            var calls = mDelayedEditorCallbacks.ToArray();
+            mDelayedEditorCallbacks.Clear();
+
+            foreach (var call in calls)
+                call();
+        }
+
+
+        #endregion
+
+        #region Header
 
         static public bool DrawHeader (string text, string key, bool ShowToggle=false, bool ToggleState=false, System.Action<bool> OnToggle= null, string HelpURL=default(string), Color disabledColor = default(Color))
 		{
@@ -87,6 +112,41 @@ namespace I2
 		static public void CloseHeader()
 		{
 			GUILayout.EndHorizontal();
+		}
+
+		public static void OnGUI_Footer(string pluginName, string pluginVersion, string helpURL, string documentationURL, string assetStoreURL)
+		{
+			GUILayout.BeginHorizontal();
+			string versionTip = "";
+            /*if (I2Analytics.HasNewVersion(pluginName))
+			{
+				versionTip = "There is a new version of " + pluginName + ".\nClick here for more details";
+				if (GUILayout.Button(new GUIContent("", versionTip), EditorStyles.label, GUILayout.Width(25)))
+					I2AboutWindow.DoShowScreen();
+
+				var rect = GUILayoutUtility.GetLastRect();
+				rect.yMin = rect.yMax - 25;
+				rect.xMax = rect.xMin + 25;
+				rect.y += 3;
+				GUITools.DrawSkinIcon(rect, "CN EntryWarnIcon", "CN EntryWarn");
+			}*/
+
+            if (GUILayout.Button(new GUIContent("v" + pluginVersion, versionTip), EditorStyles.miniLabel))
+			{
+				Application.OpenURL(assetStoreURL);
+				//I2AboutWindow.DoShowScreen();
+			}
+
+			GUILayout.FlexibleSpace();
+
+			if (GUILayout.Button("Ask a Question", EditorStyles.miniLabel))
+				Application.OpenURL(helpURL);
+
+			GUILayout.Space(10);
+
+			if (GUILayout.Button("Documentation", EditorStyles.miniLabel))
+				Application.OpenURL(documentationURL);
+			GUILayout.EndHorizontal();            
 		}
 
 
@@ -178,7 +238,7 @@ namespace I2
 			return Index;
 		}
 
-		static public int DrawTabs( int Index, Texture2D[] Tabs, GUIStyle Style, int height )
+        static public int DrawTabs( int Index, Texture2D[] Tabs, GUIStyle Style, int height )
 		{
 			GUIStyle MyStyle = new GUIStyle(Style!=null?Style:GUI.skin.FindStyle("dragtab"));
 			MyStyle.fixedHeight=0;
@@ -203,8 +263,9 @@ namespace I2
 
 		#region Object Array
 
-		static public void DrawObjectsArray( SerializedProperty PropArray )
+		static public bool DrawObjectsArray( SerializedProperty PropArray, bool allowDuplicates=false, bool allowResources=false, bool allowSceneObj=false, Object testAdd=null, Object testReplace=null, int testReplaceIndex=-1, int testDeleteIndex=-1 )
 		{
+            bool hasChanged = false;
 			GUILayout.BeginVertical();
 
 				int DeleteElement = -1, MoveUpElement = -1;
@@ -215,19 +276,35 @@ namespace I2
 					GUILayout.BeginHorizontal();
 
 						//--[ Delete Button ]-------------------
-						if (GUILayout.Button("X", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+						if (GUILayout.Button("X", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)) || i == testDeleteIndex)
 				    		DeleteElement = i;
 
 						GUILayout.Space(2);
 				    	//--[ Object ]--------------------------
 						GUILayout.BeginHorizontal(EditorStyles.toolbar);
 							GUI.changed = false;
-							Object Obj = EditorGUILayout.ObjectField( Prop.objectReferenceValue, typeof(Object), true, GUILayout.ExpandWidth(true));
+							Object Obj = EditorGUILayout.ObjectField( Prop.objectReferenceValue, typeof(Object), allowSceneObj, GUILayout.ExpandWidth(true));
+                            if (testReplaceIndex == i)
+                            {
+                                Obj = testReplace;
+                                GUI.changed = true;
+                            }
+
+                            if (!allowResources && Obj != null)
+                            {
+                                var path = AssetDatabase.GetAssetPath(Obj);
+                                if (path != null && path.Contains("/Resources/"))
+                                    Obj = null;
+                            }
+
 							if (Obj==null)
 								DeleteElement = i;
 							else
-							if (GUI.changed)
-								Prop.objectReferenceValue = Obj;
+							if (GUI.changed && (allowDuplicates || !ObjectsArrayHasReference(PropArray, Obj)))
+                            {
+                                Prop.objectReferenceValue = Obj;
+                                hasChanged = true;
+                            }
 						GUILayout.EndHorizontal();
 
 						//--[ MoveUp Button ]-------------------
@@ -246,32 +323,61 @@ namespace I2
 				}
 
 				GUILayout.BeginHorizontal(EditorStyles.toolbar);
-					Object NewObj = EditorGUILayout.ObjectField( null, typeof(Object), true, GUILayout.ExpandWidth(true));
-					if (NewObj) 
+					Object NewObj = EditorGUILayout.ObjectField( null, typeof(Object), allowSceneObj, GUILayout.ExpandWidth(true));
+                    if (testAdd != null)
+                    {
+                        NewObj = testAdd;
+                    }
+
+                    if (!allowResources && NewObj != null)
+                    {
+                        var path = AssetDatabase.GetAssetPath(NewObj);
+                        if (path != null && path.Contains("/Resources/"))
+                    NewObj = null;
+                    }
+                    if (NewObj && (allowDuplicates || !ObjectsArrayHasReference(PropArray, NewObj)))
 					{
 						int Index = PropArray.arraySize;
 						PropArray.InsertArrayElementAtIndex( Index );
 						PropArray.GetArrayElementAtIndex(Index).objectReferenceValue = NewObj;
-					}
+                        hasChanged = true;
+                    }
 				GUILayout.EndHorizontal();
 
 				if (DeleteElement>=0)
 				{
 					PropArray.DeleteArrayElementAtIndex( DeleteElement );
 					//PropArray.DeleteArrayElementAtIndex( DeleteElement );
+                    hasChanged = true;
 				}
 
 				if (MoveUpElement>=0)
+                {
 					PropArray.MoveArrayElement(MoveUpElement, MoveUpElement-1);
+                    hasChanged = true;
+                }
 
-			GUILayout.EndVertical();
+            GUILayout.EndVertical();
+            return hasChanged;
 		}
 
-		#endregion
+        static public bool ObjectsArrayHasReference(SerializedProperty PropArray, Object obj)
+        {
+            for (int i = 0, imax = PropArray.arraySize; i < imax; ++i)
+            {
+                SerializedProperty Prop = PropArray.GetArrayElementAtIndex(i);
+                if (Prop.objectReferenceValue == obj)
+                    return true;
+            }
+            return false;
+        }
 
-		#region Toggle
 
-		static public int ToggleToolbar( int Index, string[] Options )
+        #endregion
+
+        #region Toggle
+
+        static public int ToggleToolbar( int Index, string[] Options )
 		{
 			GUILayout.BeginHorizontal();
 			for (int i=0; i<Options.Length; ++i)
@@ -392,10 +498,34 @@ namespace I2
 		}
 		static GUIContent mIconHelp;
 
-		#endregion
+        public static GUIStyle FindSkinStyle(string name)
+        {
+            var allStyles = GUI.skin.customStyles;
+            for (int i = 0, imax = allStyles.Length; i < imax; ++i)
+            {
+                if (allStyles[i].name == name)
+                    return allStyles[i];
+            }
+            return null;
+        }
+        public static void DrawSkinIcon(Rect rect, params string[] iconNames)
+        {
+            foreach (var icon in iconNames)
+            {
+                var style = FindSkinStyle(icon);
+                if (style == null || style.normal == null || style.normal.background == null)
+                    continue;
 
-		#region Angle Drawer
-		private static Vector2 mAngle_lastMousePosition;
+                GUI.DrawTexture(rect, style.normal.background);
+                return;
+            }
+            //Debug.Log("unable to find icon");
+        }
+
+        #endregion
+
+        #region Angle Drawer
+        private static Vector2 mAngle_lastMousePosition;
 		static Texture mAngle_TextureCircle;
 		static Texture pAngle_TextureCircle { 
 			get{ 
@@ -454,7 +584,7 @@ namespace I2
 				}
 			}
 
-			GUI.DrawTexture(knobRect, pAngle_TextureCircle);
+			if (pAngle_TextureCircle) GUI.DrawTexture(knobRect, pAngle_TextureCircle);
 			Matrix4x4 matrix = GUI.matrix;
 			
 			if (min != max)
@@ -464,7 +594,7 @@ namespace I2
 
 			knobRect.height = 5;
 			knobRect.width = 5;
-			GUI.DrawTexture(knobRect, pAngle_TextureCircle);
+			if (pAngle_TextureCircle) GUI.DrawTexture(knobRect, pAngle_TextureCircle);
 			GUI.matrix = matrix;
 			
 			Rect label = new Rect(rect.x + rect.height, rect.y + (rect.height / 2) - 9, rect.height, 18);
@@ -504,7 +634,7 @@ namespace I2
 			}
 
 			if (background==null) background = pAngle_TextureCircle;
-			GUI.DrawTexture (knobRect, background);
+			if (background) GUI.DrawTexture (knobRect, background);
 
 			Matrix4x4 matrix = GUI.matrix;
 			
@@ -520,7 +650,7 @@ namespace I2
 			knobRect.height = Radius+2;
 			if (knobLine == null)
 				knobLine = GUI.skin.FindStyle ("MeBlendPosition").normal.background;
-			GUI.DrawTexture(knobRect, knobLine);
+			if (knobLine) GUI.DrawTexture(knobRect, knobLine);
 			GUI.matrix = matrix;
 			
 			return Mathf.Repeat(angle, 360);
@@ -598,6 +728,21 @@ namespace I2
 
             return Reflection_InvokeMethod( typeof( EditorGUI ), "DoTextField", s_RecycledEditor, controlID, position, text, style, null, false, false, false, false ) as string;
 		}
-		#endregion
-	}
+
+        static public void RepaintInspectors()
+        {
+            EditorApplication.update -= RepaintInspectors;
+            var assemblyEditor = Assembly.GetAssembly(typeof(Editor));
+            var typeInspectorWindow = assemblyEditor.GetType("UnityEditor.InspectorWindow");
+            typeInspectorWindow.GetMethod("RepaintAllInspectors", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
+        }
+
+        public static void ScheduleRepaintInspectors()
+        {
+            EditorApplication.update += RepaintInspectors;
+        }
+
+
+        #endregion
+    }
 }

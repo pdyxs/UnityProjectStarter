@@ -46,7 +46,7 @@ namespace I2.Loc
         static string FromBase64(string base64string)
         {
             byte[] encodedDataAsBytes = System.Convert.FromBase64String(base64string);
-            return System.Text.Encoding.UTF8.GetString(encodedDataAsBytes);
+            return System.Text.Encoding.UTF8.GetString(encodedDataAsBytes, 0, encodedDataAsBytes.Length);
         }
 
         static string XoREncode(string NormalString)

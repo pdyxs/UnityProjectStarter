@@ -20,6 +20,8 @@ namespace I2.Loc
 
         [SerializeField]
         public List<ParamValue> _Params = new List<ParamValue>();
+
+        public bool _AutoRegister = false;
         
         public string GetParameterValue( string ParamName )
         {
@@ -57,5 +59,32 @@ namespace I2.Loc
             if (loc != null)
                 loc.OnLocalize(true);
         }
-	}
+
+        public virtual void OnEnable()
+        {
+            if (_AutoRegister)
+                DoAutoRegister();
+        }
+
+        [I2RuntimeInitialize]
+        public void AutoStart()
+        {
+            if (_AutoRegister)
+                DoAutoRegister();
+        }
+
+        public void DoAutoRegister()
+        {
+            if (!LocalizationManager.ParamManagers.Contains(this))
+            {
+                LocalizationManager.ParamManagers.Add(this);
+                LocalizationManager.LocalizeAll(true);
+            }
+        }
+
+        public void OnDisable()
+        {
+            LocalizationManager.ParamManagers.Remove(this);
+        }
+    }
 }

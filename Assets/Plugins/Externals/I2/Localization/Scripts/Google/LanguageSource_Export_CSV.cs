@@ -85,11 +85,57 @@ namespace I2.Loc
 			}
 		}
 
-		#endregion
+        #endregion
 
-		#region CSV format
+        #region Language format
 
-		public string Export_CSV( string Category, char Separator = ',' )
+        string Export_Language( int langIndex )
+        {
+            if (!mLanguages[langIndex].IsLoaded())
+                return null;
+
+            StringBuilder sb = new StringBuilder();
+
+            int nLanguages = mLanguages.Count;
+
+            for (int i=0; i<mTerms.Count; ++i)
+            {
+                if (i > 0)
+                    sb.Append("[i2t]");
+                var term = mTerms[i];
+
+                int iTargetLanguage = langIndex;
+                if (OnMissingTranslation==MissingTranslationAction.Fallback && string.IsNullOrEmpty(term.Languages[langIndex]) && string.IsNullOrEmpty(term.Languages_Touch[langIndex]))
+                {
+                    for (int iLang = 0; iLang < nLanguages; ++iLang)
+                    {
+                        if (mLanguages[iLang].IsEnabled() && (!string.IsNullOrEmpty(term.Languages[iLang]) || !string.IsNullOrEmpty(term.Languages_Touch[iLang])))
+                        {
+                            iTargetLanguage = iLang;
+                            break;
+                        }
+                    }
+
+                }
+                if (iTargetLanguage!=langIndex && !string.IsNullOrEmpty(term.Languages[iTargetLanguage]))
+                    sb.Append("[i2fb]");
+                sb.Append(term.Languages[iTargetLanguage]);
+
+                sb.Append("[i2d]");
+
+                if (iTargetLanguage != langIndex && !string.IsNullOrEmpty(term.Languages_Touch[iTargetLanguage]))
+                    sb.Append("[i2fb]");
+                sb.Append(term.Languages_Touch[iTargetLanguage]);
+            }
+
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region CSV format
+
+        public string Export_CSV( string Category, char Separator = ',' )
 		{
 			StringBuilder Builder = new StringBuilder();
 			

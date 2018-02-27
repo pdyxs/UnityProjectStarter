@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace I2.Loc
 {
@@ -28,10 +29,10 @@ namespace I2.Loc
 
 
 		public static string HelpURL_forum 			= "http://goo.gl/Uiyu8C";//http://www.inter-illusion.com/forum/i2-localization";
-		public static string HelpURL_Documentation 	= "\thttp://www.inter-illusion.com/assets/I2LocalizationManual/I2LocalizationManual.html";
+		public static string HelpURL_Documentation 	= "http://www.inter-illusion.com/assets/I2LocalizationManual/I2LocalizationManual.html";
 		public static string HelpURL_Tutorials		= "http://inter-illusion.com/tools/i2-localization";
 		public static string HelpURL_ReleaseNotes	= "http://inter-illusion.com/forum/i2-localization/26-release-notes";
-
+		public static string HelpURL_AssetStore		= "https://www.assetstore.unity3d.com/#!/content/14884";
 
 		#endregion
 		
@@ -52,18 +53,6 @@ namespace I2.Loc
 			mProp_AlwaysForceLocalize		= serializedObject.FindProperty("AlwaysForceLocalize");
 			mProp_TermSuffix                = serializedObject.FindProperty("TermSuffix");
 			mProp_TermPrefix                = serializedObject.FindProperty("TermPrefix");
-
-			// Check Copy/Paste Localize component into another gameObject
-			if (mLocalize.mTarget != null)
-			{
-				var cmp = mLocalize.mTarget as Component;
-				if (cmp != null && cmp.gameObject != mLocalize.gameObject)
-				{
-					serializedObject.ApplyModifiedProperties();
-					mLocalize.mTarget = null;
-					serializedObject.Update();
-				}
-			}
 
 			if (LocalizationManager.Sources.Count==0)
 				LocalizationManager.UpdateSources();
@@ -171,12 +160,18 @@ namespace I2.Loc
 
 			GUILayout.Space (10);
 
-			I2AboutWindow.OnGUI_Footer("I2 Localization", LocalizationManager.GetVersion(), HelpURL_forum, HelpURL_Documentation);
+			GUITools.OnGUI_Footer("I2 Localization", LocalizationManager.GetVersion(), HelpURL_forum, HelpURL_Documentation, LocalizeInspector.HelpURL_AssetStore);
 
 			GUILayout.EndVertical();
 
 			serializedObject.ApplyModifiedProperties();
-		}
+            if (Event.current.type == EventType.Repaint)
+            {
+                LocalizationEditor.mTestAction = LocalizationEditor.eTest_ActionType.None;
+                LocalizationEditor.mTestActionArg = null;
+                LocalizationEditor.mTestActionArg2 = null;
+            }
+        }
 
 		#endregion
 
@@ -187,8 +182,23 @@ namespace I2.Loc
 			if (mLocalize.mGUI_ShowReferences = GUITools.DrawHeader ("References", mLocalize.mGUI_ShowReferences))
 			{
 				GUITools.BeginContents();
-				GUITools.DrawObjectsArray( mProp_TranslatedObjects );
-				GUITools.EndContents();
+
+                bool canTest = Event.current.type == EventType.Repaint;
+
+                var testAddObj = (canTest && LocalizationEditor.mTestAction == LocalizationEditor.eTest_ActionType.Button_Assets_Add) ? (Object)LocalizationEditor.mTestActionArg : null;
+                var testReplaceIndx = (canTest && LocalizationEditor.mTestAction == LocalizationEditor.eTest_ActionType.Button_Assets_Replace) ? (int)LocalizationEditor.mTestActionArg : -1;
+                var testReplaceObj = (canTest && LocalizationEditor.mTestAction == LocalizationEditor.eTest_ActionType.Button_Assets_Replace) ? (Object)LocalizationEditor.mTestActionArg2 : null;
+                var testDeleteIndx = (canTest && LocalizationEditor.mTestAction == LocalizationEditor.eTest_ActionType.Button_Assets_Delete) ? (int)LocalizationEditor.mTestActionArg : -1;
+
+                bool changed = GUITools.DrawObjectsArray( mProp_TranslatedObjects, false, false, true, testAddObj, testReplaceObj, testReplaceIndx, testDeleteIndx);
+                if (changed)
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    foreach (var obj in serializedObject.targetObjects)
+                        (obj as Localize).UpdateAssetDictionary();
+                }
+
+                GUITools.EndContents();
 			}
 		}
 
@@ -216,13 +226,15 @@ namespace I2.Loc
 
 				GUITools.BeginContents();
 
-					if (GUI_SelectedTerm==0) OnGUI_PrimaryTerm( oldTab!=GUI_SelectedTerm );
-										else OnGUI_SecondaryTerm(oldTab!=GUI_SelectedTerm);
+                TermData termData = null;
+
+					if (GUI_SelectedTerm==0) termData = OnGUI_PrimaryTerm( oldTab!=GUI_SelectedTerm );
+										else termData = OnGUI_SecondaryTerm(oldTab!=GUI_SelectedTerm);
 
 				GUITools.EndContents();
 
 				//--[ Modifier ]-------------
-				if (mLocalize.Term != "-")
+				if (mLocalize.Term != "-" && termData!=null && termData.TermType==eTermType.Text)
 				{
 					EditorGUI.BeginChangeCheck();
 					int val = EditorGUILayout.Popup("Modifier", GUI_SelectedTerm == 0 ? (int)mLocalize.PrimaryTermModifier : (int)mLocalize.SecondaryTermModifier, System.Enum.GetNames(typeof(Localize.TermModification)));
@@ -271,7 +283,7 @@ namespace I2.Loc
 				GUILayout.EndHorizontal ();
 	
 				//--[ Right To Left ]-------------
-				if (mLocalize.Term!="-")
+				if (mLocalize.Term!="-" &&  termData != null && termData.TermType == eTermType.Text)
 				{ 
 					GUILayout.BeginVertical("Box");
                         GUILayout.BeginHorizontal();
@@ -297,7 +309,7 @@ namespace I2.Loc
 			}
 		}
 
-		void OnGUI_PrimaryTerm( bool OnOpen )
+		TermData OnGUI_PrimaryTerm( bool OnOpen )
 		{
 			string Key = mLocalize.mTerm;
 			if (string.IsNullOrEmpty(Key))
@@ -309,10 +321,10 @@ namespace I2.Loc
 			if (OnOpen) mNewKeyName = Key;
 			if ( OnGUI_SelectKey( ref Key, string.IsNullOrEmpty(mLocalize.mTerm)))
 				mProp_mTerm.stringValue = Key;
-			LocalizationEditor.OnGUI_Keys_Languages( Key, mLocalize, true );
+			return LocalizationEditor.OnGUI_Keys_Languages( Key, mLocalize, true );
 		}
 
-		void OnGUI_SecondaryTerm( bool OnOpen )
+        TermData OnGUI_SecondaryTerm( bool OnOpen )
 		{
 			string Key = mLocalize.mTermSecondary;
 
@@ -325,7 +337,7 @@ namespace I2.Loc
 			if (OnOpen) mNewKeyName = Key;
 			if ( OnGUI_SelectKey( ref Key, string.IsNullOrEmpty(mLocalize.mTermSecondary)))
 				mProp_mTermSecondary.stringValue = Key;
-			LocalizationEditor.OnGUI_Keys_Languages( Key, mLocalize, false );
+			return LocalizationEditor.OnGUI_Keys_Languages( Key, mLocalize, false );
 		}
 
 		bool OnGUI_SelectKey( ref string Term, bool Inherited )  // Inherited==true means that the mTerm is empty and we are using the Label.text instead
@@ -561,13 +573,14 @@ namespace I2.Loc
 			int CurrentTarget = -1;
 
 			mLocalize.FindTarget();
-            foreach (var locTarget in LocalizationManager.mLocalizeTargets)
-            {
-                if (locTarget.CanLocalize(mLocalize))
-                {
-                    TargetTypes.Add( locTarget.GetName() );
 
-                    if (locTarget.HasTarget(mLocalize))
+            foreach (var desc in LocalizationManager.mLocalizeTargets)
+            {
+                if (desc.CanLocalize(mLocalize))
+                {
+                    TargetTypes.Add(desc.Name);
+
+                    if (mLocalize.mLocalizeTarget!=null && desc.GetTargetType() == mLocalize.mLocalizeTarget.GetType())
                         CurrentTarget = TargetTypes.Count - 1;
                 }
             }
@@ -585,13 +598,16 @@ namespace I2.Loc
 			if (GUI.changed)
 			{
 				serializedObject.ApplyModifiedProperties();
-                mLocalize.mTarget = null;
 
-                foreach (var locTarget in LocalizationManager.mLocalizeTargets)
+                if (mLocalize.mLocalizeTarget != null)
+                    DestroyImmediate(mLocalize.mLocalizeTarget);
+
+                foreach (var desc in LocalizationManager.mLocalizeTargets)
                 {
-                    if (locTarget.GetName()== TargetTypes[index])
+                    if (desc.Name == TargetTypes[index])
                     {
-                        locTarget.FindTarget(mLocalize);
+                        mLocalize.mLocalizeTarget = desc.CreateTarget(mLocalize);
+                        mLocalize.mLocalizeTargetName = desc.GetTargetType().ToString();
                         break;
                     }
                 }
@@ -599,16 +615,6 @@ namespace I2.Loc
 			}
 			GUILayout.EndHorizontal();
 		}
-
-        void TestTargetType<T>(ref List<string> TargetTypes, string TypeName, ref int CurrentTarget) where T : Component
-        {
-            if (mLocalize.GetComponent<T>() == null)
-                return;
-            TargetTypes.Add(TypeName);
-
-            if ((mLocalize.mTarget as T) != null)
-                CurrentTarget = TargetTypes.Count - 1;
-        }
 
 		#endregion
 

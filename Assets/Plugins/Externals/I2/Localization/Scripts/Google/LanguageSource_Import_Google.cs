@@ -45,7 +45,7 @@ namespace I2.Loc
 			if (GoogleUpdateFrequency==eGoogleUpdateFrequency.Never)
 				return;
 			
-			if (!LocalizationManager.IsPlaying())
+			if (!I2Utils.IsPlaying())
 					return;
 					
 			string PlayerPrefName = GetSourcePlayerPrefName();
@@ -135,7 +135,7 @@ namespace I2.Loc
 			PlayerPrefs.SetString("LastGoogleUpdate_"+PlayerPrefName, DateTime.Now.ToString());
 
 			//--[ Checking google for updated data ]-----------------
-			CoroutineManager.pInstance.StartCoroutine(Import_Google_Coroutine());
+			CoroutineManager.Start(Import_Google_Coroutine());
 		}
 
 		string GetSourcePlayerPrefName()
@@ -228,7 +228,7 @@ namespace I2.Loc
 
 		public bool HasGoogleSpreadsheet()
 		{
-			return !string.IsNullOrEmpty(LocalizationManager.GetWebServiceURL(this)) && !string.IsNullOrEmpty(Google_SpreadsheetKey) && !string.IsNullOrEmpty(Google_SpreadsheetName);
+            return !string.IsNullOrEmpty(LocalizationManager.GetWebServiceURL(this)) && !string.IsNullOrEmpty(Google_SpreadsheetKey);// && !string.IsNullOrEmpty(Google_SpreadsheetName);
 		}
 
 		public string Import_Google_Result( string JsonString, eSpreadsheetUpdateMode UpdateMode, bool saveInPlayerPrefs = false )

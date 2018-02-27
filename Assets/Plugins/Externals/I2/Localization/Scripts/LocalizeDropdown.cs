@@ -23,6 +23,8 @@ namespace I2.Loc
 
         void OnEnable()
         {
+            if (_Terms.Count == 0)
+                FillValues();
             OnLocalize ();
         }
 		
@@ -33,15 +35,37 @@ namespace I2.Loc
 
             if (string.IsNullOrEmpty(LocalizationManager.CurrentLanguage))
                 return;
-            
-			UpdateLocalization();
-		}
-		
-		public void UpdateLocalization()
+
+            UpdateLocalization();
+        }
+
+        void FillValues()
+        {
+            var _Dropdown = GetComponent<Dropdown>();
+            if (_Dropdown == null && I2Utils.IsPlaying())
+            {
+                #if TextMeshPro
+                    FillValuesTMPro();
+                #endif
+                return;
+            }
+
+            foreach (var term in _Dropdown.options)
+            {
+                _Terms.Add(term.text);
+            }
+        }
+
+        public void UpdateLocalization()
 		{
 			var _Dropdown = GetComponent<Dropdown>();
-			if (_Dropdown==null)
-				return;
+            if (_Dropdown == null)
+            {
+                #if TextMeshPro
+                    UpdateLocalizationTMPro();
+                #endif
+                return;
+            }
 			
 			_Dropdown.options.Clear();
 			foreach (var term in _Terms)
@@ -51,6 +75,36 @@ namespace I2.Loc
 			}
             _Dropdown.RefreshShownValue();
 		}
-	}
+
+        #if TextMeshPro
+        public void UpdateLocalizationTMPro()
+        {
+            var _Dropdown = GetComponent<TMPro.TMP_Dropdown>();
+            if (_Dropdown == null)
+                return;
+
+            _Dropdown.options.Clear();
+            foreach (var term in _Terms)
+            {
+                var translation = LocalizationManager.GetTranslation(term);
+                _Dropdown.options.Add(new TMPro.TMP_Dropdown.OptionData(translation));
+            }
+            _Dropdown.RefreshShownValue();
+        }
+
+        void FillValuesTMPro()
+        {
+            var _Dropdown = GetComponent<TMPro.TMP_Dropdown>();
+            if (_Dropdown == null)
+                return;
+
+            foreach (var term in _Dropdown.options)
+            {
+                _Terms.Add(term.text);
+            }
+        }
+#endif
+
+    }
 #endif
 }

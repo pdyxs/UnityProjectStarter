@@ -1,5 +1,4 @@
-﻿#pragma warning disable 0414
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using MiniJSON;
@@ -39,7 +38,7 @@ namespace DG.TrelloAPI
         {
             if (!string.IsNullOrEmpty(www.error))
             {
-                throw new TrelloException(errorMessage + ": " + www.error, new System.Exception(www.error));
+                throw new TrelloException(errorMessage + ": " + www.error);
             }
         }
 

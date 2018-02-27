@@ -19,6 +19,8 @@ namespace I2.Loc
 		
 		void OnGUI_Tools_CharSet()
 		{
+			bool computeSet = false;
+
 			// remove missing languages
 			for (int i=mCharSetTool_Languages.Count-1; i>=0; --i)
 			{
@@ -28,12 +30,31 @@ namespace I2.Loc
 
 			GUILayout.BeginHorizontal (EditorStyles.toolbar);
 			GUILayout.Label ("Languages:", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+			if (GUILayout.Button ("All", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false))) 
+			{
+				mCharSetTool_Languages.Clear ();
+				mCharSetTool_Languages.AddRange (mLanguageSource.mLanguages.Select(x=>x.Name));
+				computeSet = true;
+			}
+			if (GUILayout.Button ("None", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false))) 
+			{
+				mCharSetTool_Languages.Clear ();
+				computeSet = true;
+			}
+			if (GUILayout.Button ("Invert", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false))) 
+			{
+				var current = mCharSetTool_Languages.ToList ();
+				mCharSetTool_Languages.Clear ();
+				mCharSetTool_Languages.AddRange (mLanguageSource.mLanguages.Select(x=>x.Name).Where(j=>!current.Contains(j)));
+				computeSet = true;
+			}
+
+
 			GUILayout.EndHorizontal ();
 
 			//--[ Language List ]--------------------------
 
 			mScrollPos_Languages = GUILayout.BeginScrollView( mScrollPos_Languages, EditorStyles.textArea, GUILayout.MinHeight (100), GUILayout.MaxHeight(Screen.height), GUILayout.ExpandHeight(false));
-            bool computeSet = false;
 
 			for (int i=0, imax=mLanguageSource.mLanguages.Count; i<imax; ++i)
 			{

@@ -210,5 +210,50 @@ namespace I2.Loc
 			
 			return eTermType.Text;
 		}
-	}
+
+        #region Language format
+
+        void Import_Language(int langIndex, string langData, bool useFallback)
+        {
+            if (mLanguages[langIndex].IsLoaded())
+                return;
+
+            int iTerm = 0;
+            int index = 0;
+            while (index>=0)
+            {
+                var termData = mTerms[iTerm];
+                iTerm++;
+
+                int nextIndex = langData.IndexOf("[i2d]", index);
+                termData.Languages[langIndex] = index == nextIndex ? null : langData.Substring(index, nextIndex - index);
+                if (termData.Languages[langIndex] != null && termData.Languages[langIndex].StartsWith("[i2fb]"))
+                {
+                    termData.Languages[langIndex] = (useFallback) ? termData.Languages[langIndex].Substring(6) : null;
+                }
+                index = nextIndex+5;
+
+                nextIndex = langData.IndexOf("[i2t]", index);
+                if (nextIndex>0)
+                {
+                    termData.Languages_Touch[langIndex] = (index==nextIndex)?null: langData.Substring(index, nextIndex - index);
+                }
+                else
+                {
+                    termData.Languages_Touch[langIndex] = (index>=langData.Length) ? null : langData.Substring(index);
+                }
+                if (termData.Languages_Touch[langIndex] != null && termData.Languages_Touch[langIndex].StartsWith("[i2fb]"))
+                {
+                    termData.Languages_Touch[langIndex] = (useFallback) ? termData.Languages_Touch[langIndex].Substring(6) : null;
+                }
+
+                if (nextIndex < 0)
+                    break;
+
+                index = nextIndex + 5;
+            }
+        }
+
+        #endregion
+    }
 }

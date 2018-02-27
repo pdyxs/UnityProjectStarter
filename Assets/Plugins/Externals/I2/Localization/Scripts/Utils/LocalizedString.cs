@@ -20,11 +20,20 @@ namespace I2.Loc
             return new LocalizedString() { mTerm = term };
         }
 
+        public LocalizedString (LocalizedString str)
+        {
+            mTerm = str.mTerm;
+            mRTL_IgnoreArabicFix = str.mRTL_IgnoreArabicFix;
+            mRTL_MaxLineLength = str.mRTL_MaxLineLength;
+            mRTL_ConvertNumbers = str.mRTL_ConvertNumbers;
+        }
+
+
 
         public override string ToString()
         {
-            var translation = LocalizationManager.GetTranslation(mTerm, !mRTL_IgnoreArabicFix, mRTL_MaxLineLength, !mRTL_ConvertNumbers);
-            LocalizationManager.ApplyLocalizationParams(ref translation, null);
+            var translation = LocalizationManager.GetTranslation(mTerm, !mRTL_IgnoreArabicFix, mRTL_MaxLineLength, !mRTL_ConvertNumbers, true);
+            LocalizationManager.ApplyLocalizationParams(ref translation);
             return translation;
         }
     }
