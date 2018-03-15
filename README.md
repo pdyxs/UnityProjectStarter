@@ -1,2 +1,1 @@
-# wherethestarsare
-How We Know Where The Stars Are
+# Unity Project Starter
